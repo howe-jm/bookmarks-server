@@ -1,16 +1,17 @@
 const bookmarks = [
   {
-    id: 1,
-    title: 'Task One',
-    content: 'This is card one',
+    id: '8sdfbvbs65sd',
+    title: 'Google',
+    url: 'http://google.com',
+    desc: 'An indie search engine startup',
+    rating: 4,
   },
-];
-
-const lists = [
   {
-    id: 1,
-    header: 'List One',
-    cardIds: [1],
+    id: '87fn36vd9djd',
+    title: 'Fluffiest Cats in the World',
+    url: 'http://medium.com/bloggerx/fluffiest-cats-334',
+    desc: 'The only list of fluffy cats online',
+    rating: 5,
   },
 ];
 

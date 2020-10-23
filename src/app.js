@@ -17,7 +17,6 @@ app.use(helmet());
 app.use(cors());
 app.use(express.json());
 app.use(validateBearerToken);
-
 app.use(function errorHandler(error, req, res, next) {
   let response;
   if (NODE_ENV === 'production') {
@@ -29,5 +28,6 @@ app.use(function errorHandler(error, req, res, next) {
   }
   res.status(500).json(response);
 });
+app.use(bookmarksRoute);
 
 module.exports = app;
