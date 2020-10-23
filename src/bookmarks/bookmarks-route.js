@@ -6,6 +6,11 @@ const bookmarks = require('../store.js');
 const bookmarkRouter = express.Router();
 const bodyParser = express.json();
 
+var expression = /(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})/gi;
+var regex = new RegExp(expression);
+
+const port = process.env.PORT;
+
 bookmarkRouter
   .route('/bookmarks')
   .get((req, res) => {
@@ -14,24 +19,46 @@ bookmarkRouter
   .post(bodyParser, (req, res) => {
     const { title, url, desc, rating } = req.body;
     if (!title || title === '') {
+      logger.error('Title required.');
       return res.status(400).send('Title required.');
     }
     if (!url || url === '') {
+      logger.error('URL required.');
       return res.status(400).send('URL required.');
     }
+    if (!url.match(regex)) {
+      logger.error('Invalid URL.');
+      return res.status(400).send('Invalid URL.');
+    }
     if (!desc || desc === '') {
+      logger.error('Desc required.');
       return res.status(400).send('Description required.');
     }
     if (!rating) {
+      logger.error('Rating required.');
       return res.status(400).send('Rating required.');
     }
     if (typeof rating !== 'number') {
+      logger.error('Rating must be a number.');
       return res
         .status(400)
         .send('Rating must be a number.');
     }
+    let id = uuid();
+    const newBookmark = {
+      id,
+      title,
+      url,
+      desc,
+      rating,
+    };
+    bookmarks.push(newBookmark);
+    logger.info(`Bookmark with ${id} created`);
 
-    res.status(201).send('All is well');
+    res
+      .status(201)
+      .location(`http://localhost:${port}/bookmarks/${id}`)
+      .json(newBookmark);
   });
 
 bookmarkRouter
