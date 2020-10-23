@@ -38,11 +38,17 @@ bookmarkRouter
       logger.error('Rating required.');
       return res.status(400).send('Rating required.');
     }
-    if (typeof rating !== 'number') {
-      logger.error('Rating must be a number.');
+    if (
+      typeof rating !== 'number' ||
+      rating < 0 ||
+      rating > 5
+    ) {
+      logger.error(
+        'Rating must be a number between 1 and 5.'
+      );
       return res
         .status(400)
-        .send('Rating must be a number.');
+        .send('Rating must be a number between 1 and 5.');
     }
     let id = uuid();
     const newBookmark = {

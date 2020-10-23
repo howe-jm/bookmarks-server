@@ -1,17 +1,19 @@
 require('dotenv').config();
+const { NODE_ENV } = require('./config');
+
 const express = require('express');
+const app = express();
+
 const morgan = require('morgan');
+const morganOption =
+  NODE_ENV === 'production' ? 'tiny' : 'common';
+
 const cors = require('cors');
 const helmet = require('helmet');
-const { NODE_ENV } = require('./config');
+
 const validateBearerToken = require('./bearerToken');
 const errorHandler = require('./errorHandler');
 const bookmarksRoute = require('./bookmarks/bookmarks-route.js');
-
-const app = express();
-
-const morganOption =
-  NODE_ENV === 'production' ? 'tiny' : 'common';
 
 app.use(morgan(morganOption));
 app.use(helmet());
