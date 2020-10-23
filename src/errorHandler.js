@@ -1,4 +1,5 @@
 const { NODE_ENV } = require('./config');
+const logger = require('./logger');
 
 function errorHandler(error, req, res) {
   let response;
@@ -7,6 +8,7 @@ function errorHandler(error, req, res) {
   } else {
     // eslint-disable-next-line no-console
     console.error(error);
+    logger.error(error.message);
     response = { message: error.message, error };
   }
   res.status(500).json(response);
