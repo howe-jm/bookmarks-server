@@ -85,7 +85,7 @@ describe('Bookmarks Endpoints', function () {
       this.retries(3);
       const newBookmark = {
         title: 'Test new bookmark',
-        website_url: 'Test new bookmark content...',
+        website_url: 'http://reddit.com',
         website_description: 'Some content about some things',
         rating: '3',
       };
@@ -113,7 +113,7 @@ describe('Bookmarks Endpoints', function () {
     requiredFields.forEach((field) => {
       const newBookmark = {
         title: 'Test new bookmark',
-        website_url: 'Test new bookmark content...',
+        website_url: 'http://www.reddit.com',
         website_description: 'Some content about some things',
         rating: 3,
       };
@@ -127,11 +127,41 @@ describe('Bookmarks Endpoints', function () {
           .expect(400, { error: { message: `Missing '${field}' in request body` } });
       });
     });
+    context(`Given an invalid URL`, () => {
+      const newBookmark = {
+        title: 'Test new bookmark',
+        website_url: 'http://this-bad-url',
+        website_description: 'Some content about some things',
+        rating: 3,
+      };
+      it(`responds with a 400 and an error`, () => {
+        return supertest(app)
+          .post('/bookmarks')
+          .set({ Authorization: `Bearer ${token}` })
+          .send(newBookmark)
+          .expect(400, { error: { message: `Invalid URL` } });
+      });
+    });
+    context(`Given an invalid rating`, () => {
+      const newBookmark = {
+        title: 'Test new bookmark',
+        website_url: 'http://www.this-fine-url.com',
+        website_description: 'Some content about some things',
+        rating: 99,
+      };
+      it(`responds with a 400 and an error`, () => {
+        return supertest(app)
+          .post('/bookmarks')
+          .set({ Authorization: `Bearer ${token}` })
+          .send(newBookmark)
+          .expect(400, { error: { message: `Rating must be between 1 and 5` } });
+      });
+    });
     context(`Given an XSS attack bookmark`, () => {
       const maliciousBookmark = {
         id: 911,
         title: 'Naughty naughty very naughty &lt;script&gt;alert("xss");&lt;/script&gt;',
-        website_url: 'Test new bookmark content...',
+        website_url: 'http://www.reddit.com',
         website_description: `Bad image <img src="https://url.to.file.which/does-not.exist" onerror="alert(document.cookie);">. But not <strong>all</strong> bad.`,
         rating: '1',
       };

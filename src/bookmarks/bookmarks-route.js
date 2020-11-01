@@ -17,14 +17,13 @@ const serializeArticle = (bookmark) => ({
 var expression = /(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})/gi;
 var regex = new RegExp(expression);
 
-const port = process.env.PORT;
-
 bookmarkRouter
   .route('/bookmarks')
   .get((req, res, next) => {
     BookmarksService.getAllBookmarks(req.app.get('db'))
       .then((bookmarks) => {
         if (bookmarks.length === 0) {
+          logger.error(`No bookmarks`);
           return res.status(404).json({
             error: { message: `No bookmarks` },
           });
@@ -43,10 +42,24 @@ bookmarkRouter
     };
 
     for (const [key, value] of Object.entries(newBookmark))
-      if (value == null)
+      if (value == null) {
+        logger.error(`Missing '${key}' in request body`);
         return res.status(400).json({
           error: { message: `Missing '${key}' in request body` },
         });
+      }
+
+    if (!newBookmark.website_url.match(regex)) {
+      logger.error('Invalid URL.');
+      return res.status(400).json({ error: { message: `Invalid URL` } });
+    }
+
+    if (newBookmark.rating < 0 || newBookmark.rating > 5) {
+      logger.error('Invalid rating');
+      return res
+        .status(400)
+        .json({ error: { message: `Rating must be between 1 and 5` } });
+    }
 
     BookmarksService.insertBookmark(req.app.get('db'), newBookmark)
       .then((bookmark) => {
@@ -63,6 +76,7 @@ bookmarkRouter
   .all((req, res, next) => {
     BookmarksService.getById(req.app.get('db'), req.params.id).then((bookmark) => {
       if (!bookmark) {
+        logger.error(`Bookmark doesn't exist`);
         return res.status(404).json({
           error: { message: `Bookmark doesn't exist` },
         });
@@ -76,8 +90,9 @@ bookmarkRouter
     BookmarksService.getById(req.app.get('db'), id)
       .then((bookmark) => {
         if (!bookmark) {
+          logger.error(`Bookmark doesn't exist`);
           return res.status(404).json({
-            error: { message: `No matching bookmarks` },
+            error: { message: `Bookmark doesn't exist` },
           });
         }
         res.json(bookmark);
