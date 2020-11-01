@@ -60,6 +60,17 @@ bookmarkRouter
 
 bookmarkRouter
   .route('/bookmarks/:id')
+  .all((req, res, next) => {
+    BookmarksService.getById(req.app.get('db'), req.params.id).then((bookmark) => {
+      if (!bookmark) {
+        return res.status(404).json({
+          error: { message: `Bookmark doesn't exist` },
+        });
+      }
+      res.bookmark = bookmark;
+      next();
+    });
+  })
   .get((req, res, next) => {
     const { id } = req.params;
     BookmarksService.getById(req.app.get('db'), id)
@@ -73,16 +84,13 @@ bookmarkRouter
       })
       .catch(next);
   })
-  .delete((req, res) => {
-    const { id } = req.params;
-    const bookmarkIdx = bookmarks.findIndex((obj) => obj.id === id);
-    if (bookmarkIdx === -1) {
-      logger.error(`Bookmark with ${id} not found.`);
-      return res.status(404).send('Bookmark not found!');
-    }
-    bookmarks.splice(bookmarkIdx, 1);
-    logger.info(`Bookmark with ${id} deleted.`);
-    res.status(204).end();
+  .delete((req, res, next) => {
+    const knexInstance = req.app.get('db');
+    BookmarksService.deleteBookmark(knexInstance, req.params.id)
+      .then(() => {
+        res.status(204).end();
+      })
+      .catch(next);
   });
 
 module.exports = bookmarkRouter;

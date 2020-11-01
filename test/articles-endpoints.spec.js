@@ -58,7 +58,7 @@ describe('Bookmarks Endpoints', function () {
           .get(`/bookmarks/${bookmarkId}`)
           .set({ Authorization: `Bearer ${token}` })
           .expect(404, {
-            error: { message: `No matching bookmarks` },
+            error: { message: `Bookmark doesn't exist` },
           });
       });
     });
@@ -80,7 +80,7 @@ describe('Bookmarks Endpoints', function () {
     });
   });
 
-  describe.only(`POST /bookmarks`, () => {
+  describe(`POST /bookmarks`, () => {
     it(`creates a bookmark, responding with 201 and the new bookmark`, function () {
       this.retries(3);
       const newBookmark = {
@@ -154,6 +154,42 @@ describe('Bookmarks Endpoints', function () {
               `Bad image <img src="https://url.to.file.which/does-not.exist">. But not <strong>all</strong> bad.`
             );
           });
+      });
+    });
+  });
+
+  describe(`DELETE /bookmarks/:bookmark_id`, () => {
+    context('Given there are bookmarks in the database', () => {
+      const testBookmarks = makeBookmarksArray();
+
+      beforeEach('insert bookmarks', () => {
+        return db.into('bookmarks').insert(testBookmarks);
+      });
+
+      it('responds with 204 and removes the bookmark', () => {
+        const idToRemove = 2;
+        const expectedBookmarks = testBookmarks.filter(
+          (bookmark) => bookmark.id !== idToRemove
+        );
+        return supertest(app)
+          .delete(`/bookmarks/${idToRemove}`)
+          .set({ Authorization: `Bearer ${token}` })
+          .expect(204)
+          .then((res) =>
+            supertest(app)
+              .get(`/bookmarks`)
+              .set({ Authorization: `Bearer ${token}` })
+              .expect(expectedBookmarks)
+          );
+      });
+    });
+    context(`Given no bookmarks`, () => {
+      it(`responds with 404`, () => {
+        const bookmarkId = 123456;
+        return supertest(app)
+          .delete(`/bookmarks/${bookmarkId}`)
+          .set({ Authorization: `Bearer ${token}` })
+          .expect(404, { error: { message: `Bookmark doesn't exist` } });
       });
     });
   });
