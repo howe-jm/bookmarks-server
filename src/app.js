@@ -5,8 +5,7 @@ const express = require('express');
 const app = express();
 
 const morgan = require('morgan');
-const morganOption =
-  NODE_ENV === 'production' ? 'tiny' : 'common';
+const morganOption = NODE_ENV === 'production' ? 'tiny' : 'common';
 
 const cors = require('cors');
 const helmet = require('helmet');
@@ -21,6 +20,6 @@ app.use(cors());
 app.use(express.json());
 app.use(validateBearerToken);
 app.use(errorHandler);
-app.use(bookmarksRoute);
+app.use('/api/bookmarks', bookmarksRoute);
 
 module.exports = app;

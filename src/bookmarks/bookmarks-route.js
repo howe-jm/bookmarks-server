@@ -1,3 +1,6 @@
+/* eslint-disable eqeqeq */
+/* eslint-disable quotes */
+const path = require('path');
 const express = require('express');
 const xss = require('xss');
 const logger = require('../logger');
@@ -18,7 +21,7 @@ var expression = /(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-
 var regex = new RegExp(expression);
 
 bookmarkRouter
-  .route('/bookmarks')
+  .route('/')
   .get((req, res, next) => {
     BookmarksService.getAllBookmarks(req.app.get('db'))
       .then((bookmarks) => {
@@ -65,14 +68,14 @@ bookmarkRouter
       .then((bookmark) => {
         res
           .status(201)
-          .location(`/bookmarks/${bookmark.id}`)
+          .location(path.posix.join(req.originalUrl + `/${bookmark.id}`))
           .json(serializeArticle(bookmark));
       })
       .catch(next);
   });
 
 bookmarkRouter
-  .route('/bookmarks/:id')
+  .route('/:id')
   .all((req, res, next) => {
     BookmarksService.getById(req.app.get('db'), req.params.id).then((bookmark) => {
       if (!bookmark) {
@@ -103,6 +106,24 @@ bookmarkRouter
     const knexInstance = req.app.get('db');
     BookmarksService.deleteBookmark(knexInstance, req.params.id)
       .then(() => {
+        res.status(204).end();
+      })
+      .catch(next);
+  })
+  .patch(bodyParser, (req, res, next) => {
+    const { title, website_url, website_description, rating } = req.body;
+    const bookmarkToUpdate = { title, website_url, website_description, rating };
+
+    const numberOfValues = Object.values(bookmarkToUpdate).filter(Boolean).length;
+    if (numberOfValues === 0)
+      return res.status(400).json({
+        error: {
+          message: `Request body must content either 'title', 'website_url', 'website_description', or 'rating'`,
+        },
+      });
+
+    BookmarksService.updateBookmark(req.app.get('db'), req.params.id, bookmarkToUpdate)
+      .then((numRowsAffected) => {
         res.status(204).end();
       })
       .catch(next);
